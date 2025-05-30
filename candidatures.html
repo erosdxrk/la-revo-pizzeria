@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Candidatures reçues</title>
+  <link rel="stylesheet" href="style.css">
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const mdp = prompt("🔒 Entrez le mot de passe pour accéder aux candidatures :");
+      if (mdp !== "Rayden1301") {
+        alert("Mot de passe incorrect. Accès refusé.");
+        document.body.innerHTML = "<h2 style='text-align:center; color:red;'>⛔ Accès refusé</h2>";
+      } else {
+        fetch("/.netlify/functions/get-candidatures")
+          .then(res => res.json())
+          .then(data => {
+            const container = document.getElementById("liste");
+            data.reverse().forEach((candidature, index) => {
+              const card = document.createElement("div");
+              card.className = "container";
+              card.innerHTML = `
+                <h3>${candidature.nom}</h3>
+                <p><strong>Âge RP :</strong> ${candidature.age}</p>
+                <p><strong>Email :</strong> ${candidature.email}</p>
+                <p><strong>Téléphone :</strong> ${candidature.telephone}</p>
+                <p><strong>Discord :</strong> ${candidature.discord}</p>
+                <p><strong>FiveM/Steam :</strong> ${candidature.fivem}</p>
+                <p><strong>Motivation :</strong> ${candidature.experience}</p>
+                <button onclick="validerCandidature('${candidature.nom}', true, this)">✅ Accepter</button>
+                <button onclick="validerCandidature('${candidature.nom}', false, this)">❌ Refuser</button>
+              `;
+              container.appendChild(card);
+            });
+          });
+      }
+    });
+
+    function validerCandidature(nom, accepte, bouton) {
+      fetch("/.netlify/functions/valider-candidature", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ nom, accepte })
+      }).then(() => {
+        bouton.parentElement.innerHTML += `<p style="color:${accepte ? 'green' : 'red'}">Message envoyé sur Discord.</p>`;
+        const buttons = bouton.parentElement.querySelectorAll("button");
+        buttons.forEach(btn => btn.disabled = true);
+      });
+    }
+  </script>
+</head>
+<body>
+  <h1 style="text-align:center">📋 Candidatures reçues</h1>
+  <div id="liste"></div>
+</body>
+</html>
